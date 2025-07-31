@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const mongoose =require('mongoose')
+require('dotenv').config();
+const Transaction = require("./models/Transactions.js");
 const app = express();
 
 app.use(cors());
@@ -10,8 +13,14 @@ app.get("/api/test", (req, res) => {
   res.json("test ok");
 });
 
-app.post("/api/transaction", (req, res) => {
-  res.json(req.body);
+app.post("/api/transaction", async (req, res) => {
+    
+   await mongoose.connect(process.env.MONGO_URL)
+  const { name, description, datetime, price } = req.body;
+   const transaction = await Transaction.create({name,price, description, datetime})
+
+  res.json(transaction);
 });
 
 app.listen(4040);
+//AA5OuNLzp9Pv2X6e
