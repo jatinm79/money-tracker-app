@@ -1,97 +1,114 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
+  const [name, setName] = useState("");
+  const [datetime, setDateTime] = useState("");
+  const [description, setDescription] = useState("");
+  const [transactions, setTransactions] = useState([]);
 
-  const [name, setName] = useState('');
-  const [datetime, setDateTime] = useState('');
-  const [description, setDescription] = useState('');
+  useEffect(() => {
+    getTransactions().then(setTransactions);
+  }, []);
 
-  function addNewTransaction(ev){
+  async function getTransactions() {
+    const url = process.env.REACT_APP_API_URL + "/transactions";
+    const response = await fetch(url);
+    return await response.json();
+  }
+
+  function addNewTransaction(ev) {
     ev.preventDefault();
-    const url = process.env.REACT_APP_API_URL+'/transaction';
+    const url = process.env.REACT_APP_API_URL + "/transaction";
 
-    const price = name.split(' ')[0];
+    const price = name.split(" ")[0];
     fetch(url, {
-      method: 'POST',
-      headers: {'Content-type' : 'application/json'},
-      body: JSON.stringify({name:name.substring(price.length+1),price,description,datetime})
-    }).then(response => {
-      response.json().then(json=>{
-        setName("")
-        setDescription("")
-        setDateTime("")
-          console.log('result', json);
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({
+        name: name.substring(price.length + 1),
+        price,
+        description,
+        datetime,
+      }),
+    }).then((response) => {
+      response.json().then((json) => {
+        setName("");
+        setDescription("");
+        setDateTime("");
+        console.log("result", json);
       });
     });
-    
   }
+
+  let balance = 0;
+  for (const transaction of transactions) {
+    balance = balance + transaction.price;
+  }
+
+  balance = balance.toFixed(2);
+  const fraction = balance.split(".")[1];
+  balance = balance.split(".")[0];
 
   return (
     <main>
       <h1>
-        ₹400000<span>.00</span>
+        {balance}
+        <span>{fraction}</span>
       </h1>
 
       <form onSubmit={addNewTransaction}>
         <div className="basic">
-          <input type="text" 
-                 value={name}
-                 onChange={ev => setName(ev.target.value)}
-                 placeholder={"+40000 new Samsung TV"} />
-          <input 
-                value={datetime}
-                onChange={ev => setDateTime(ev.target.value)}
-                type="datetime-local" />
+          <input
+            type="text"
+            value={name}
+            onChange={(ev) => setName(ev.target.value)}
+            placeholder={"+40000 new Samsung TV"}
+          />
+          <input
+            value={datetime}
+            onChange={(ev) => setDateTime(ev.target.value)}
+            type="datetime-local"
+          />
         </div>
 
         <div>
-          <input type="text" 
-                  value={description}
-                  onChange={ev => setDescription(ev.target.value)}
-                  placeholder={"Description"} />
+          <input
+            type="text"
+            value={description}
+            onChange={(ev) => setDescription(ev.target.value)}
+            placeholder={"Description"}
+          />
         </div>
 
         <button type="submit">Add new transaction</button>
       </form>
 
       <div className="transactions">
-        <div className="transaction">
-          <div className="left">
-            <div className="name">New Bike</div>
-            <div className="description">It was time for new bike.</div>
-          </div>
+        {transactions.length > 0 &&
+          transactions.map((transaction) => (
+            <div>
+              <div className="transaction">
+                <div className="left">
+                  <div className="name">{transaction.name}</div>
+                  <div className="description">{transaction.description}</div>
+                </div>
 
-          <div className="right">
-            <div className="price red">-₹50000</div>
-            <div className="datetime">2025-07-30 12:45</div>
-          </div>
-        </div>
-
-        <div className="transaction">
-          <div className="left">
-            <div className="name">Gig Job</div>
-            <div className="description">Build a website.</div>
-          </div>
-
-          <div className="right">
-            <div className="price green">+₹40000</div>
-            <div className="datetime">2025-07-30 12:45</div>
-          </div>
-        </div>
-
-        <div className="transaction">
-          <div className="left">
-            <div className="name">Samsung Ultra Phone</div>
-            <div className="description">It was time for new Phone.</div>
-          </div>
-
-          <div className="right">
-            <div className="price red">-₹90000</div>
-            <div className="datetime">2025-07-30 12:45</div>
-          </div>
-        </div>
+                <div className="right">
+                  <div
+                    
+                    className={`price ${
+                      transaction.price < 0 ? "red" : "green"
+                    }`}
+                  >
+                    {transaction.price}
+                  </div>
+                  <div className="datetime">{transaction.datetime}</div>
+                </div>
+              </div>
+            </div>
+          ))}
       </div>
     </main>
   );
